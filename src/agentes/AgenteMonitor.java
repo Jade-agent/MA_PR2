@@ -5,6 +5,8 @@
  */
 package agentes;
 
+import GUI.ConsolaJFrame;
+import GUI.TablaJFrame;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
@@ -17,52 +19,36 @@ import java.util.ArrayList;
 
 /**
  *
- * @author jcsp0003 
  */
-public class AgenteAgricultor extends Agent {
+public class AgenteMonitor extends Agent {
 
     //Variables del agente
-    private int cosecha, ganancias;
-    private boolean negociando;
+    private AgenteAgricultor agricultores[];
+    private TablaJFrame guiAgricultores;
+    private TablaJFrame guiMercados;
     private AID consola;
     private ArrayList<String> mensajesParaConsola;
 
     @Override
     protected void setup() {
         //Inicialización de las variables del agente
-        cosecha = 0;
-        ganancias = 0;
-        negociando = false;
-        consola = null;
         mensajesParaConsola = new ArrayList();
 
-        //Registro del agente en las Páginas Amarrillas
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("Productor");
-        sd.setName("Agricultor");
-        dfd.addServices(sd);
-        try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-        }
+        //Configuración del GUI
+        guiAgricultores = new TablaJFrame("Agricultor");
+        guiMercados = new TablaJFrame("Mercado");
 
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaEnvioConsola(this,5000));
+        addBehaviour(new TareaEnvioConsola(this, 5000));
     }
 
     @Override
     protected void takeDown() {
-        //Desregristo del agente de las Páginas Amarillas
-        try {
-            DFService.deregister(this);
-        } catch (FIPAException fe) {
-        }
         //Liberación de recursos, incluido el GUI
+        guiAgricultores.dispose();
+        guiMercados.dispose();
 
         //Despedida
         System.out.println("Finaliza la ejecución del agente: " + this.getName());
@@ -70,20 +56,6 @@ public class AgenteAgricultor extends Agent {
 
     //Métodos de trabajo del agente
     //Clases internas que representan las tareas del agente
-    public class TareaGenerarCosecha extends TickerBehaviour {
-
-        public TareaGenerarCosecha(Agent a, long period) {
-            super(a, period);
-        }
-
-        @Override
-        protected void onTick() {
-            ++cosecha;
-            System.out.println("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
-            mensajesParaConsola.add("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
-        }
-    }
-
     public class TareaBuscarConsola extends TickerBehaviour {
 
         //Se buscarán agentes consola y operación
@@ -115,7 +87,7 @@ public class AgenteAgricultor extends Agent {
             }
         }
     }
-    
+
     public class TareaEnvioConsola extends TickerBehaviour {
 
         public TareaEnvioConsola(Agent a, long period) {
@@ -131,15 +103,13 @@ public class AgenteAgricultor extends Agent {
                     mensaje.setSender(myAgent.getAID());
                     mensaje.addReceiver(consola);
                     mensaje.setContent(mensajesParaConsola.remove(0));
-            
+
                     myAgent.send(mensaje);
-                }
-                else {
+                } else {
                     //Si queremos hacer algo si no tenemos mensajes
                     //pendientes para enviar a la consola
                 }
             }
         }
     }
-
 }
