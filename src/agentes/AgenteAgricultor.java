@@ -53,7 +53,7 @@ public class AgenteAgricultor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaEnvioConsola(this,10000));
+        addBehaviour(new TareaEnvioConsola(this,5000));
     }
 
     @Override
@@ -81,6 +81,7 @@ public class AgenteAgricultor extends Agent {
         protected void onTick() {
             ++cosecha;
             System.out.println("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
+            mensajesParaConsola.add("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
         }
     }
 

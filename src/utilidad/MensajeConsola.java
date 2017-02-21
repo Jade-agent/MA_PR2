@@ -10,6 +10,7 @@ package utilidad;
  * Clase para el envío de mensajes a la consola del agente
  */
 public class MensajeConsola {
+
     private String nombreAgente;
     private String contenido;
 
@@ -36,7 +37,6 @@ public class MensajeConsola {
 
     @Override
     public String toString() {
-        return "Mensaje enviado por: " + nombreAgente + 
-                "\nContenido: " + contenido + "\n";
+        return contenido + "\n";
     }
 }

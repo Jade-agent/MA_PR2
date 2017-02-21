@@ -6,6 +6,7 @@
 package GUI;
 
 import jade.core.Agent;
+import java.awt.Font;
 import utilidad.MensajeConsola;
 
 /**
@@ -24,6 +25,7 @@ public class ConsolaJFrame extends javax.swing.JFrame {
         
         initComponents();
         this.nombreAgente = nombreAgente;
+        
     }
 
     public String getNombreAgente() {
@@ -35,6 +37,7 @@ public class ConsolaJFrame extends javax.swing.JFrame {
             setVisible(true);
         }
         salida.append(mensaje.toString());
+        this.salida.setCaretPosition(salida.getDocument().getLength());
     }
 
     /**
