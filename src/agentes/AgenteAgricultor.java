@@ -7,17 +7,19 @@ package agentes;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 
 /**
  *
- * @author jcsp0003 
+ * @author jcsp0003
  */
 public class AgenteAgricultor extends Agent {
 
@@ -52,7 +54,9 @@ public class AgenteAgricultor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaEnvioConsola(this,5000));
+        addBehaviour(new TareaEnvioConsola(this, 5000));
+        addBehaviour(new LeerPeticionGanancias());
+        
     }
 
     @Override
@@ -79,7 +83,7 @@ public class AgenteAgricultor extends Agent {
         @Override
         protected void onTick() {
             ++cosecha;
-            System.out.println("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
+            //System.out.println("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
             mensajesParaConsola.add("El agente " + myAgent.getName() + " ha recogido la cosecha, ahora tiene " + cosecha);
         }
     }
@@ -115,7 +119,7 @@ public class AgenteAgricultor extends Agent {
             }
         }
     }
-    
+
     public class TareaEnvioConsola extends TickerBehaviour {
 
         public TareaEnvioConsola(Agent a, long period) {
@@ -131,15 +135,34 @@ public class AgenteAgricultor extends Agent {
                     mensaje.setSender(myAgent.getAID());
                     mensaje.addReceiver(consola);
                     mensaje.setContent(mensajesParaConsola.remove(0));
-            
+
                     myAgent.send(mensaje);
-                }
-                else {
+                } else {
                     //Si queremos hacer algo si no tenemos mensajes
                     //pendientes para enviar a la consola
                 }
             }
         }
+    }
+
+    public class LeerPeticionGanancias extends CyclicBehaviour {  
+
+        @Override
+        public void action() {
+            //Solo se atenderán mensajes INFORM
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+               //System.out.println("Soy el agricultor me estan preguntando mis ganancias");
+                ACLMessage respuesta = mensaje.createReply();
+                respuesta.setPerformative(ACLMessage.QUERY_IF);
+                respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + cosecha);
+                send(respuesta);
+            } else {
+                block();
+            }
+        }
+
     }
 
 }

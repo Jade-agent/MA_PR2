@@ -16,39 +16,38 @@ public class TablaJFrame extends javax.swing.JFrame {
     private boolean visible;
     private DefaultTableModel modelo;
     private String tipo;
-    
+
     /**
      * Creates new form TablaJFrame
+     *
      * @param tipoo
      */
     public TablaJFrame(String tipoo) {
         initComponents();
-        this.tipo=tipoo;
-        this.setTitle("Tabla de "+this.tipo);
-        visible=false;
-        
+        this.setVisible(true);
+        this.tipo = tipoo;
+        this.setTitle("Tabla de " + this.tipo);
+        visible = false;
+
         modelo = new DefaultTableModel();
-        if("Agricultor".equals(this.tipo)){
+        if ("Agricultor".equals(this.tipo)) {
             modelo.addColumn("Agentes agricultor");
-             modelo.addColumn("Ganancias");
-        }else{
+            modelo.addColumn("Ganancias");
+        } else {
             modelo.addColumn("Agentes mercado");
             modelo.addColumn("Stocks");
+            setLocation(440,0);
         }
         this.tabla.setModel(modelo);
     }
-    
-    public void insertarFila(String nombreAgente,String valor){
+
+    public void insertarFila(String nombreAgente, String valor) {
         String[] Datos = new String[2];
-        Datos[0]=nombreAgente;
-        Datos[1]=valor;
+        Datos[0] = nombreAgente;
+        Datos[1] = valor;
         modelo.addRow(Datos);
-        if(!visible){
-            visible=true;
-            this.setVisible(true);
-        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -65,6 +64,11 @@ public class TablaJFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         Cerrar.setText("Finalizar");
+        Cerrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CerrarActionPerformed(evt);
+            }
+        });
 
         tabla.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -84,26 +88,32 @@ public class TablaJFrame extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 614, Short.MAX_VALUE)
-                .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addGap(251, 251, 251)
-                .addComponent(Cerrar, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 401, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(141, 141, 141)
+                        .addComponent(Cerrar, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(Cerrar, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(Cerrar, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void CerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CerrarActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_CerrarActionPerformed
 
     /**
      * @param args the command line arguments
