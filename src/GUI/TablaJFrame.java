@@ -1,4 +1,4 @@
-/*
+    /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -13,7 +13,6 @@ import javax.swing.table.DefaultTableModel;
  */
 public class TablaJFrame extends javax.swing.JFrame {
 
-    private boolean visible;
     private DefaultTableModel modelo;
     private String tipo;
 
@@ -27,7 +26,6 @@ public class TablaJFrame extends javax.swing.JFrame {
         this.setVisible(true);
         this.tipo = tipoo;
         this.setTitle("Tabla de " + this.tipo);
-        visible = false;
 
         modelo = new DefaultTableModel();
         if ("Agricultor".equals(this.tipo)) {

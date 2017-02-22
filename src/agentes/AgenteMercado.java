@@ -26,8 +26,10 @@ public class AgenteMercado extends Agent {
 
     //Variables del agente
     private int capital;
-    private AID consola;
     private ArrayList<String> mensajesParaConsola;
+    
+    private AID consola;
+    private AID[] agentesAgricultor;
 
     @Override
     protected void setup() {
@@ -52,6 +54,7 @@ public class AgenteMercado extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaRecibirInversion(this, 3000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
+        addBehaviour(new TareaBuscarAgricultores(this, 5000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
     }
@@ -116,6 +119,41 @@ public class AgenteMercado extends Agent {
         }
     }
 
+    public class TareaBuscarAgricultores extends TickerBehaviour {
+
+        public TareaBuscarAgricultores(Agent a, long period) {
+            super(a, period);
+        }
+
+        @Override
+        protected void onTick() {
+            DFAgentDescription template;
+            ServiceDescription sd;
+            DFAgentDescription[] result;
+
+            //Busca agentes Agricultor
+            template = new DFAgentDescription();
+            sd = new ServiceDescription();
+            sd.setName("Agricultor");
+            template.addServices(sd);
+
+            try {
+                result = DFService.search(myAgent, template);
+                if (result.length > 0) {
+                    agentesAgricultor = new AID[result.length];
+                    for (int i = 0; i < result.length; ++i) {
+                        agentesAgricultor[i] = result[i].getName();
+                    }
+                    mensajesParaConsola.add("Se han encontrado "+result.length+" agricultores");
+                } else {
+                    //No se han encontrado agentes Agricultor
+                    agentesAgricultor = null;
+                }
+            } catch (FIPAException fe) {
+            }
+        }
+    }
+    
     public class TareaEnvioConsola extends CyclicBehaviour {
 
         @Override
