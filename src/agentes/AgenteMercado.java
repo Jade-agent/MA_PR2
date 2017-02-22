@@ -32,6 +32,8 @@ public class AgenteMercado extends Agent {
     private int stock;
     private ArrayList<String> mensajesParaConsola;
 
+    private boolean comprando;
+
     private ArrayList<ObjetoContenedor> ofertas;
 
     private AID consola;
@@ -44,6 +46,7 @@ public class AgenteMercado extends Agent {
         nVenta = 0;
         stock = 0;
         consola = null;
+        comprando = false;
         mensajesParaConsola = new ArrayList();
 
         //Registro del agente en las Páginas Amarrillas
@@ -60,11 +63,12 @@ public class AgenteMercado extends Agent {
 
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaRecibirInversion(this, 3000));
+        addBehaviour(new TareaRecibirInversion(this, 1000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaBuscarAgricultores(this, 5000));
+        addBehaviour(new TareaBuscarAgricultores(this, 30000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
+        addBehaviour(new LeerOfertas());
     }
 
     @Override
@@ -173,6 +177,10 @@ public class AgenteMercado extends Agent {
             ServiceDescription sd;
             DFAgentDescription[] result;
 
+            if (comprando) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<---------------------------- HACER COMPRA DE EMERGENCIA
+
+            }
+
             //Busca agentes Agricultor
             template = new DFAgentDescription();
             sd = new ServiceDescription();
@@ -203,6 +211,7 @@ public class AgenteMercado extends Agent {
         public void action() {
             //Se envía la operación a todos los agentes Agricultor
             ofertas = new ArrayList();
+            comprando = true;
 
             ACLMessage mensaje = new ACLMessage(ACLMessage.REQUEST);
             mensaje.setSender(myAgent.getAID());
@@ -213,6 +222,23 @@ public class AgenteMercado extends Agent {
             mensaje.setContent("Dime tu oferta" + "," + capital + "," + nVenta + "," + this.myAgent.getName());
             send(mensaje);
         }
+    }
+
+    public class LeerOfertas extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                //Formato del mensaje: nombre,unidades,precio,nVenta
+                String[] contenido = mensaje.getContent().split(",");
+                mensajesParaConsola.add("He recibido una oferta de compra del agente " + contenido[0] + " vende " + contenido[1] + " por " + contenido[2] + "€");
+            } else {
+                block();
+            }
+        }
+
     }
 
 }
