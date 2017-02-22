@@ -236,8 +236,8 @@ public class AgenteMonitor extends Agent {
         public void action() {
             burbuja();
             if ("Agricultor".equals(this.tipo)) {
-                guiAgricultores.dispose();
-                guiAgricultores = new TablaJFrame("Agricultor");
+                //guiAgricultores.dispose();
+                //guiAgricultores = new TablaJFrame("Agricultor");
                 for (int z = totalAgricultores - 1; z >= 0; z--) {
                     if (pairAgricultores[z] != null) {
                         guiAgricultores.insertarFila(pairAgricultores[z].getNombre(), pairAgricultores[z].getValor());

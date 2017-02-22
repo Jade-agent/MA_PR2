@@ -42,6 +42,15 @@ public class TablaJFrame extends javax.swing.JFrame {
     }
 
     public void insertarFila(String nombreAgente, String valor) {
+        int filas=modelo.getRowCount();
+        for(int i=0;i<filas;i++){
+            System.out.println(modelo.getValueAt(i, 0)+" == "+nombreAgente);
+            if(modelo.getValueAt(i, 0).toString().equals(nombreAgente)){
+                System.out.println("GENIAL");
+                modelo.setValueAt(valor, i, 1);
+                return;
+            }
+        }
         String[] Datos = new String[2];
         Datos[0] = nombreAgente;
         Datos[1] = valor;
