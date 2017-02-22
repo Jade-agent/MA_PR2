@@ -5,7 +5,6 @@
  */
 package agentes;
 
-import GUI.ConsolaJFrame;
 import GUI.TablaJFrame;
 import jade.core.AID;
 import jade.core.Agent;
@@ -19,8 +18,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import utilidad.ObjetoPair;
+import utilidad.ObjetoContenedor;
 
 /**
  *
@@ -31,11 +29,11 @@ public class AgenteMonitor extends Agent {
     private TablaJFrame guiAgricultores;
     private TablaJFrame guiMercados;
 
-    private ObjetoPair[] pairAgricultores;
+    private ObjetoContenedor[] pairAgricultores;
     private int pairAgricultoresLleno;
     private int totalAgricultores;
 
-    private ObjetoPair[] pairMercados;
+    private ObjetoContenedor[] pairMercados;
     private int pairMercadosLleno;
     private int totalMercados;
 
@@ -208,7 +206,7 @@ public class AgenteMonitor extends Agent {
         @Override
         public void action() {
             //Se envía la operación a todos los agentes Agricultor
-            pairAgricultores = new ObjetoPair[agentesAgricultor.length];
+            pairAgricultores = new ObjetoContenedor[agentesAgricultor.length];
             totalAgricultores = agentesAgricultor.length;
             System.out.println("El vector tiene tam " + agentesAgricultor.length);
             pairAgricultoresLleno = 0;
@@ -229,7 +227,7 @@ public class AgenteMonitor extends Agent {
         @Override
         public void action() {
             //Se envía la operación a todos los agentes Mercado
-            pairMercados = new ObjetoPair[agentesMercado.length];
+            pairMercados = new ObjetoContenedor[agentesMercado.length];
             totalMercados = agentesMercado.length;
             System.out.println("El vector tiene tam " + agentesMercado.length);
             pairMercadosLleno = 0;
@@ -256,11 +254,11 @@ public class AgenteMonitor extends Agent {
                 //procesamos el mensaje
                 String[] contenido = mensaje.getContent().split(",");
                 if ("Agricultor".equals(contenido[0])) {
-                    pairAgricultores[pairAgricultoresLleno] = new ObjetoPair(contenido[1], contenido[2]);
+                    pairAgricultores[pairAgricultoresLleno] = new ObjetoContenedor(contenido[1], contenido[2]);
                     ++pairAgricultoresLleno;
                     addBehaviour(new RellenarTabla("Agricultor"));
                 } else {
-                    pairMercados[pairMercadosLleno] = new ObjetoPair(contenido[1], contenido[2]);
+                    pairMercados[pairMercadosLleno] = new ObjetoContenedor(contenido[1], contenido[2]);
                     ++pairMercadosLleno;
                     addBehaviour(new RellenarTabla("Mercado"));
                 }

@@ -9,18 +9,29 @@ package utilidad;
  *
  * @author jcsp0003
  */
-public class ObjetoPair implements Comparable<ObjetoPair> {
+public class ObjetoContenedor implements Comparable<ObjetoContenedor> {
 
     private String nombre;
     private String valor;
 
-    public ObjetoPair(String nombree, String valorr) {
+    private int cosecha;
+    private int oferta;
+    private int venta;
+
+    public ObjetoContenedor(String nombree, String valorr) {
         this.nombre = nombree;
         this.valor = valorr;
     }
 
+    public ObjetoContenedor(String nombree, int cosechaa, int ofertaa, int ventaa) {
+        this.nombre = nombree;
+        this.cosecha = cosechaa;
+        this.oferta = ofertaa;
+        this.venta = ventaa;
+    }
+
     @Override
-    public int compareTo(ObjetoPair o) {
+    public int compareTo(ObjetoContenedor o) {
         if (Integer.parseInt(this.valor) < Integer.parseInt(o.getValor())) {
             return -1;
         } else {
@@ -44,4 +55,15 @@ public class ObjetoPair implements Comparable<ObjetoPair> {
         this.valor = valorr;
     }
 
+    private int getCosecha() {
+        return this.cosecha;
+    }
+
+    private int getOferta() {
+        return this.oferta;
+    }
+
+    private int getVenta() {
+        return venta;
+    }
 }

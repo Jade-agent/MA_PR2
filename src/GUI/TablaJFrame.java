@@ -13,8 +13,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class TablaJFrame extends javax.swing.JFrame {
 
-    private DefaultTableModel modelo;
-    private String tipo;
+    private final DefaultTableModel modelo;
+    private final String tipo;
 
     /**
      * Creates new form TablaJFrame

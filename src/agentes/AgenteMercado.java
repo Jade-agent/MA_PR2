@@ -8,6 +8,7 @@ package agentes;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -16,6 +17,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
+import utilidad.ObjetoContenedor;
 
 /**
  *
@@ -26,8 +28,12 @@ public class AgenteMercado extends Agent {
 
     //Variables del agente
     private int capital;
+    private int nVenta;
+    private int stock;
     private ArrayList<String> mensajesParaConsola;
-    
+
+    private ArrayList<ObjetoContenedor> ofertas;
+
     private AID consola;
     private AID[] agentesAgricultor;
 
@@ -35,6 +41,8 @@ public class AgenteMercado extends Agent {
     protected void setup() {
         //Inicialización de las variables del agente
         capital = 0;
+        nVenta = 0;
+        stock = 0;
         consola = null;
         mensajesParaConsola = new ArrayList();
 
@@ -119,6 +127,40 @@ public class AgenteMercado extends Agent {
         }
     }
 
+    public class TareaEnvioConsola extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            if (consola != null && !mensajesParaConsola.isEmpty()) {
+                ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+                mensaje.setSender(myAgent.getAID());
+                mensaje.addReceiver(consola);
+                mensaje.setContent(mensajesParaConsola.remove(0));
+
+                myAgent.send(mensaje);
+            } else {
+                block();
+            }
+        }
+    }
+
+    public class LeerPeticionStock extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                ACLMessage respuesta = mensaje.createReply();
+                respuesta.setPerformative(ACLMessage.QUERY_IF);
+                respuesta.setContent("Mercado," + this.getAgent().getName() + "," + capital);
+                send(respuesta);
+            } else {
+                block();
+            }
+        }
+    }
+
     public class TareaBuscarAgricultores extends TickerBehaviour {
 
         public TareaBuscarAgricultores(Agent a, long period) {
@@ -144,7 +186,8 @@ public class AgenteMercado extends Agent {
                     for (int i = 0; i < result.length; ++i) {
                         agentesAgricultor[i] = result[i].getName();
                     }
-                    mensajesParaConsola.add("Se han encontrado "+result.length+" agricultores");
+                    ++nVenta;
+                    addBehaviour(new PedirOferta());
                 } else {
                     //No se han encontrado agentes Agricultor
                     agentesAgricultor = null;
@@ -153,40 +196,23 @@ public class AgenteMercado extends Agent {
             }
         }
     }
-    
-    public class TareaEnvioConsola extends CyclicBehaviour {
+
+    public class PedirOferta extends OneShotBehaviour {
 
         @Override
         public void action() {
-            if (consola != null && !mensajesParaConsola.isEmpty()) {
-                ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
-                mensaje.setSender(myAgent.getAID());
-                mensaje.addReceiver(consola);
-                mensaje.setContent(mensajesParaConsola.remove(0));
+            //Se envía la operación a todos los agentes Agricultor
+            ofertas = new ArrayList();
 
-                myAgent.send(mensaje);
-            } else {
-                block();
+            ACLMessage mensaje = new ACLMessage(ACLMessage.REQUEST);
+            mensaje.setSender(myAgent.getAID());
+            //Se añaden todos los agentes Agricultor
+            for (AID agentesAgricultor1 : agentesAgricultor) {
+                mensaje.addReceiver(agentesAgricultor1);
             }
+            mensaje.setContent("Dime tu oferta" + "," + capital + "," + nVenta + "," + this.myAgent.getName());
+            send(mensaje);
         }
-    }
-    
-    public class LeerPeticionStock extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
-            ACLMessage mensaje = myAgent.receive(plantilla);
-            if (mensaje != null) {
-                ACLMessage respuesta = mensaje.createReply();
-                respuesta.setPerformative(ACLMessage.QUERY_IF);
-                respuesta.setContent("Mercado," + this.getAgent().getName() + "," + capital);
-                send(respuesta);
-            } else {
-                block();
-            }
-        }
-
     }
 
 }

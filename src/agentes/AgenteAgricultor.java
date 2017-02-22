@@ -56,6 +56,7 @@ public class AgenteAgricultor extends Agent {
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
+        addBehaviour(new LeerPeticionOfertas());
 
     }
 
@@ -147,6 +148,47 @@ public class AgenteAgricultor extends Agent {
                 respuesta.setPerformative(ACLMessage.QUERY_IF);
                 respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + cosecha);
                 send(respuesta);
+            } else {
+                block();
+            }
+        }
+
+    }
+
+    public class LeerPeticionOfertas extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                if (!negociando) {
+                    if (cosecha > 0) {
+                        //Formato de la respuesta: nombre,unidades,precio
+                        String[] contenido = mensaje.getContent().split(",");
+                        ACLMessage respuesta = mensaje.createReply();
+                        respuesta.setPerformative(ACLMessage.REQUEST);
+                        float precioMax = Float.parseFloat(contenido[2]);
+                        int oferta = (int) (Math.random() * precioMax);
+                        respuesta.setContent(this.getAgent().getName() + "," + cosecha + "," + oferta);
+                        send(respuesta);
+                        negociando = true;
+                        mensajesParaConsola.add("He recibido una oferta de compra del agente " + contenido[3]);
+                    } else {
+                        negociando = false;
+                        //enviar mensaje nulo
+                        ACLMessage respuesta = mensaje.createReply();
+                        respuesta.setPerformative(ACLMessage.REQUEST);
+                        respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1);
+                        send(respuesta);
+                    }
+                } else {
+                    //enviar mensaje nulo
+                    ACLMessage respuesta = mensaje.createReply();
+                    respuesta.setPerformative(ACLMessage.REQUEST);
+                    respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1);
+                    send(respuesta);
+                }
             } else {
                 block();
             }

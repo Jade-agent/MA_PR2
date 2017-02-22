@@ -5,8 +5,6 @@
  */
 package GUI;
 
-import jade.core.Agent;
-import java.awt.Font;
 import utilidad.MensajeConsola;
 
 /**
