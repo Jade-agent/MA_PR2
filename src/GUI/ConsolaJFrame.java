@@ -23,7 +23,7 @@ public class ConsolaJFrame extends javax.swing.JFrame {
         
         initComponents();
         this.nombreAgente = nombreAgente;
-        
+        this.salida.setLineWrap(true); 
     }
 
     public String getNombreAgente() {

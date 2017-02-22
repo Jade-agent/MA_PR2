@@ -65,7 +65,7 @@ public class AgenteMercado extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaRecibirInversion(this, 1000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaBuscarAgricultores(this, 30000));
+        addBehaviour(new TareaBuscarAgricultores(this, 15000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
         addBehaviour(new LeerOfertas());
@@ -95,7 +95,7 @@ public class AgenteMercado extends Agent {
         protected void onTick() {
             int x = (int) (Math.random() * 7) + 2;
             capital += x;
-            mensajesParaConsola.add("Ha recibido una inversion de " + x + " ahora tiene " + capital);
+            //mensajesParaConsola.add("Ha recibido una inversion de " + x + " ahora tiene " + capital);
         }
     }
 
@@ -233,7 +233,33 @@ public class AgenteMercado extends Agent {
             if (mensaje != null) {
                 //Formato del mensaje: nombre,unidades,precio,nVenta
                 String[] contenido = mensaje.getContent().split(",");
-                mensajesParaConsola.add("He recibido una oferta de compra del agente " + contenido[0] + " vende " + contenido[1] + " por " + contenido[2] + "€");
+                mensajesParaConsola.add("Oferta de venta de " + contenido[0] + " vende " + contenido[1] + " por " + contenido[2] + "€");
+                int n = Integer.parseInt(contenido[3]);
+                if (n == nVenta) {
+                    int cantidad = Integer.parseInt(contenido[1]);
+                    int ofer = Integer.parseInt(contenido[2]);
+                    ofertas.add(new ObjetoContenedor(contenido[0], cantidad, ofer, mensaje));
+                    if (agentesAgricultor.length == ofertas.size()) {
+                        mensajesParaConsola.add("Me han contestado todos los agricultores");
+                        int mejor = -1;
+                        float beneficio = -1;
+                        for (int i = 0; i < ofertas.size(); i++) {
+                            mensajesParaConsola.add(Float.toString(ofertas.get(i).getBeneficio()) + " - " + beneficio + " > ");
+                            if (ofertas.get(i).getBeneficio() != -1 && beneficio < ofertas.get(i).getBeneficio()) {
+                                beneficio = ofertas.get(i).getBeneficio();
+                                mejor = i;
+                            }
+                        }
+                        if (mejor != -1) {
+                            mensajesParaConsola.add("Acepto la oferta Cosecha:" + ofertas.get(mejor).getCosecha() + " Oferta:" + ofertas.get(mejor).getOferta());
+                        } else {
+                            mensajesParaConsola.add("NO acepto ninguna oferta");
+                        }
+                    }
+                } else {
+                    mensajesParaConsola.add("ME HA LLEGADO UNA PETICION ANTIGUA");
+                }
+
             } else {
                 block();
             }

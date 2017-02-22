@@ -83,7 +83,7 @@ public class AgenteAgricultor extends Agent {
         @Override
         protected void onTick() {
             ++cosecha;
-            mensajesParaConsola.add("Ha recogido la cosecha, ahora tiene " + cosecha);
+            //mensajesParaConsola.add("Ha recogido la cosecha, ahora tiene " + cosecha);
         }
     }
 
@@ -177,13 +177,13 @@ public class AgenteAgricultor extends Agent {
                         respuesta.setContent(this.getAgent().getName() + "," + cosecha + "," + oferta + "," + contenido[2]);
                         send(respuesta);
                         negociando = true;
-                        mensajesParaConsola.add("He recibido una oferta de compra del agente " + contenido[3]+" quiero vender por "+oferta);
+                        mensajesParaConsola.add("Oferta de compra del agente " + contenido[3]+" vendo por "+oferta);
                     } else {
                         //negociando = false;
                         //enviar mensaje nulo
                         ACLMessage respuesta = mensaje.createReply();
                         respuesta.setPerformative(ACLMessage.REQUEST);
-                        respuesta.setContent(this.getAgent().getName() + "," + -1 + "," + 1 + "," + contenido[2]);
+                        respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1 + "," + contenido[2]);
                         send(respuesta);
                     }
                 } else {
@@ -191,7 +191,7 @@ public class AgenteAgricultor extends Agent {
                     mensajesParaConsola.add("Estoy negociando, no me molestes");
                     ACLMessage respuesta = mensaje.createReply();
                     respuesta.setPerformative(ACLMessage.REQUEST);
-                    respuesta.setContent(this.getAgent().getName() + "," + -2 + "," + 1 + "," + contenido[2]);
+                    respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1 + "," + contenido[2]);
                     send(respuesta);
                 }
             } else {

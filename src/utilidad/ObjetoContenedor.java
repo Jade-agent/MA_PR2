@@ -5,6 +5,8 @@
  */
 package utilidad;
 
+import jade.lang.acl.ACLMessage;
+
 /**
  *
  * @author jcsp0003
@@ -16,18 +18,18 @@ public class ObjetoContenedor implements Comparable<ObjetoContenedor> {
 
     private int cosecha;
     private int oferta;
-    private int venta;
+    private ACLMessage mensaje;
 
     public ObjetoContenedor(String nombree, String valorr) {
         this.nombre = nombree;
         this.valor = valorr;
     }
 
-    public ObjetoContenedor(String nombree, int cosechaa, int ofertaa, int ventaa) {
+    public ObjetoContenedor(String nombree, int cosechaa, int ofertaa, ACLMessage mensajee) {
         this.nombre = nombree;
         this.cosecha = cosechaa;
         this.oferta = ofertaa;
-        this.venta = ventaa;
+        this.mensaje = mensajee;
     }
 
     @Override
@@ -55,15 +57,19 @@ public class ObjetoContenedor implements Comparable<ObjetoContenedor> {
         this.valor = valorr;
     }
 
-    private int getCosecha() {
+    public int getCosecha() {
         return this.cosecha;
     }
 
-    private int getOferta() {
+    public int getOferta() {
         return this.oferta;
     }
 
-    private int getVenta() {
-        return venta;
+    public float getBeneficio() {
+        if (cosecha == 0) {
+            return -1;
+        }
+        return (float) cosecha / oferta;
     }
+
 }
