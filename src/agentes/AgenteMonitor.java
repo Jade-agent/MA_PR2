@@ -56,8 +56,8 @@ public class AgenteMonitor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola(this, 5000));
-        addBehaviour(new TareaBuscarAgricultores(this, 12000));
-        addBehaviour(new TareaBuscarMercado(this, 12000));
+        addBehaviour(new TareaBuscarAgricultores(this, 15000));
+        addBehaviour(new TareaBuscarMercado(this, 15000));
         addBehaviour(new TareaRecepcionContestacion());
 
     }

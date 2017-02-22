@@ -63,9 +63,9 @@ public class AgenteMercado extends Agent {
 
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaRecibirInversion(this, 1000));
+        addBehaviour(new TareaRecibirInversion(this, 3000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaBuscarAgricultores(this, 15000));
+        addBehaviour(new TareaBuscarAgricultores(this, 6000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
         addBehaviour(new LeerOfertas());
@@ -95,7 +95,6 @@ public class AgenteMercado extends Agent {
         protected void onTick() {
             int x = (int) (Math.random() * 7) + 2;
             capital += x;
-            //mensajesParaConsola.add("Ha recibido una inversion de " + x + " ahora tiene " + capital);
         }
     }
 
@@ -157,7 +156,7 @@ public class AgenteMercado extends Agent {
             if (mensaje != null) {
                 ACLMessage respuesta = mensaje.createReply();
                 respuesta.setPerformative(ACLMessage.QUERY_IF);
-                respuesta.setContent("Mercado," + this.getAgent().getName() + "," + capital);
+                respuesta.setContent("Mercado," + this.getAgent().getName() + "," + stock);
                 send(respuesta);
             } else {
                 block();
@@ -171,6 +170,23 @@ public class AgenteMercado extends Agent {
             super(a, period);
         }
 
+        public void compraDeEmergencia() {
+            int mejor = -1;
+            float beneficio = -1;
+            for (int i = 0; i < ofertas.size(); i++) {
+                if (ofertas.get(i).getBeneficio() != -1 && beneficio < ofertas.get(i).getBeneficio()) {
+                    beneficio = ofertas.get(i).getBeneficio();
+                    mejor = i;
+                }
+            }
+            if (mejor != -1) {
+                mensajesParaConsola.add("Acepto la oferta Cosecha: " + ofertas.get(mejor).getCosecha() + " Oferta: " + ofertas.get(mejor).getOferta());
+            } else {
+                mensajesParaConsola.add("NO acepto ninguna oferta");
+            }
+            addBehaviour(new ComunicarDecision(mejor));
+        }
+
         @Override
         protected void onTick() {
             DFAgentDescription template;
@@ -178,9 +194,10 @@ public class AgenteMercado extends Agent {
             DFAgentDescription[] result;
 
             if (comprando) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<---------------------------- HACER COMPRA DE EMERGENCIA
-
+                System.out.println("Compra de emergencia");
+                compraDeEmergencia();
             }
-
+            mensajesParaConsola.add("");
             //Busca agentes Agricultor
             template = new DFAgentDescription();
             sd = new ServiceDescription();
@@ -244,7 +261,6 @@ public class AgenteMercado extends Agent {
                         int mejor = -1;
                         float beneficio = -1;
                         for (int i = 0; i < ofertas.size(); i++) {
-                            mensajesParaConsola.add(Float.toString(ofertas.get(i).getBeneficio()) + " - " + beneficio + " > ");
                             if (ofertas.get(i).getBeneficio() != -1 && beneficio < ofertas.get(i).getBeneficio()) {
                                 beneficio = ofertas.get(i).getBeneficio();
                                 mejor = i;
@@ -255,7 +271,8 @@ public class AgenteMercado extends Agent {
                         } else {
                             mensajesParaConsola.add("NO acepto ninguna oferta");
                         }
-                        addBehaviour(new ComunicarDecision(mejor));                    }
+                        addBehaviour(new ComunicarDecision(mejor));
+                    }
                 } else {
                     mensajesParaConsola.add("ME HA LLEGADO UNA PETICION ANTIGUA");
                 }
@@ -289,8 +306,10 @@ public class AgenteMercado extends Agent {
                 ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
                 mensaje2.setSender(myAgent.getAID());
                 mensaje2.addReceiver(ofertas.get(mejor).getMensaje().getSender());
-                mensaje2.setContent("Acepto");
+                mensaje2.setContent("Acepto," + ofertas.get(mejor).getCosecha() + "," + ofertas.get(mejor).getOferta());
                 send(mensaje2);
+                stock += ofertas.get(mejor).getCosecha();
+                capital -= ofertas.get(mejor).getOferta();
             }
             mensajesParaConsola.add("He respondido a los agricultores mi decision");
         }

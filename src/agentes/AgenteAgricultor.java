@@ -52,11 +52,12 @@ public class AgenteAgricultor extends Agent {
 
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaGenerarCosecha(this, 2000));
+        addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
         addBehaviour(new LeerPeticionOfertas());
+        addBehaviour(new LeerDecision());
 
     }
 
@@ -83,7 +84,6 @@ public class AgenteAgricultor extends Agent {
         @Override
         protected void onTick() {
             ++cosecha;
-            //mensajesParaConsola.add("Ha recogido la cosecha, ahora tiene " + cosecha);
         }
     }
 
@@ -146,7 +146,7 @@ public class AgenteAgricultor extends Agent {
                 //System.out.println("Soy el agricultor me estan preguntando mis ganancias");
                 ACLMessage respuesta = mensaje.createReply();
                 respuesta.setPerformative(ACLMessage.QUERY_IF);
-                respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + cosecha);
+                respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + ganancias);
                 send(respuesta);
             } else {
                 block();
@@ -169,15 +169,11 @@ public class AgenteAgricultor extends Agent {
                         ACLMessage respuesta = mensaje.createReply();
                         respuesta.setPerformative(ACLMessage.REQUEST);
                         float precioMax = (float) (Float.parseFloat(contenido[1])*0.6);
-                        mensajesParaConsola.add("Mensaje: "+mensaje.getContent());
-                        mensajesParaConsola.add("Total que tiene: "+contenido[1]);
-                        mensajesParaConsola.add("Precio maximo: "+precioMax);
                         int oferta = (int) (Math.random() * precioMax);
-                        mensajesParaConsola.add("Oferta realizada: "+oferta);
                         respuesta.setContent(this.getAgent().getName() + "," + cosecha + "," + oferta + "," + contenido[2]);
                         send(respuesta);
                         negociando = true;
-                        mensajesParaConsola.add("Oferta de compra del agente " + contenido[3]+" vendo por "+oferta);
+                        //mensajesParaConsola.add("Oferta de compra del agente " + contenido[3]+" vendo por "+oferta);
                     } else {
                         //negociando = false;
                         //enviar mensaje nulo
@@ -201,4 +197,28 @@ public class AgenteAgricultor extends Agent {
 
     }
 
+    public class LeerDecision extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                String[] contenido = mensaje.getContent().split(",");
+                if("Acepto".equals(contenido[0])){
+                    mensajesParaConsola.add("Han aceptado mi oferta");
+                    int vendo=Integer.parseInt(contenido[1]);
+                    int gano=Integer.parseInt(contenido[2]);
+                    cosecha-=vendo;
+                    ganancias+=gano;
+                }else{
+                    mensajesParaConsola.add("Han rechazado mi oferta");
+                }
+                negociando=false;
+            } else {
+                block();
+            }
+        }
+
+    }
 }
