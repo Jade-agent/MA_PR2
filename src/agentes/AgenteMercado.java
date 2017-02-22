@@ -251,11 +251,11 @@ public class AgenteMercado extends Agent {
                             }
                         }
                         if (mejor != -1) {
-                            mensajesParaConsola.add("Acepto la oferta Cosecha:" + ofertas.get(mejor).getCosecha() + " Oferta:" + ofertas.get(mejor).getOferta());
+                            mensajesParaConsola.add("Acepto la oferta Cosecha: " + ofertas.get(mejor).getCosecha() + " Oferta: " + ofertas.get(mejor).getOferta());
                         } else {
                             mensajesParaConsola.add("NO acepto ninguna oferta");
                         }
-                    }
+                        addBehaviour(new ComunicarDecision(mejor));                    }
                 } else {
                     mensajesParaConsola.add("ME HA LLEGADO UNA PETICION ANTIGUA");
                 }
@@ -264,7 +264,36 @@ public class AgenteMercado extends Agent {
                 block();
             }
         }
+    }
 
+    public class ComunicarDecision extends OneShotBehaviour {
+
+        private final int mejor;
+
+        public ComunicarDecision(int mejorr) {
+            this.mejor = mejorr;
+        }
+
+        @Override
+        public void action() {
+            ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+            mensaje.setSender(myAgent.getAID());
+            for (int i = 0; i < ofertas.size(); i++) {
+                if (i != mejor) {
+                    mensaje.addReceiver(ofertas.get(i).getMensaje().getSender());
+                }
+            }
+            mensaje.setContent("Rechazo");
+            send(mensaje);
+            if (mejor != -1) {
+                ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
+                mensaje2.setSender(myAgent.getAID());
+                mensaje2.addReceiver(ofertas.get(mejor).getMensaje().getSender());
+                mensaje2.setContent("Acepto");
+                send(mensaje2);
+            }
+            mensajesParaConsola.add("He respondido a los agricultores mi decision");
+        }
     }
 
 }

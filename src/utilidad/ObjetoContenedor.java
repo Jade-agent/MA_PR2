@@ -71,5 +71,9 @@ public class ObjetoContenedor implements Comparable<ObjetoContenedor> {
         }
         return (float) cosecha / oferta;
     }
+    
+    public ACLMessage getMensaje(){
+        return this.mensaje;
+    }
 
 }
