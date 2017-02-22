@@ -54,9 +54,9 @@ public class AgenteAgricultor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaEnvioConsola(this, 5000));
+        addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
-        
+
     }
 
     @Override
@@ -120,32 +120,24 @@ public class AgenteAgricultor extends Agent {
         }
     }
 
-    public class TareaEnvioConsola extends TickerBehaviour {
-
-        public TareaEnvioConsola(Agent a, long period) {
-            super(a, period);
-        }
+    public class TareaEnvioConsola extends CyclicBehaviour {
 
         @Override
-        protected void onTick() {
-            ACLMessage mensaje;
-            if (consola != null) {
-                if (!mensajesParaConsola.isEmpty()) {
-                    mensaje = new ACLMessage(ACLMessage.INFORM);
-                    mensaje.setSender(myAgent.getAID());
-                    mensaje.addReceiver(consola);
-                    mensaje.setContent(mensajesParaConsola.remove(0));
+        public void action() {
+            if (consola != null && !mensajesParaConsola.isEmpty()) {
+                ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+                mensaje.setSender(myAgent.getAID());
+                mensaje.addReceiver(consola);
+                mensaje.setContent(mensajesParaConsola.remove(0));
 
-                    myAgent.send(mensaje);
-                } else {
-                    //Si queremos hacer algo si no tenemos mensajes
-                    //pendientes para enviar a la consola
-                }
+                myAgent.send(mensaje);
+            } else {
+                block();
             }
         }
     }
 
-    public class LeerPeticionGanancias extends CyclicBehaviour {  
+    public class LeerPeticionGanancias extends CyclicBehaviour {
 
         @Override
         public void action() {
@@ -153,7 +145,7 @@ public class AgenteAgricultor extends Agent {
             MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
             ACLMessage mensaje = myAgent.receive(plantilla);
             if (mensaje != null) {
-               //System.out.println("Soy el agricultor me estan preguntando mis ganancias");
+                //System.out.println("Soy el agricultor me estan preguntando mis ganancias");
                 ACLMessage respuesta = mensaje.createReply();
                 respuesta.setPerformative(ACLMessage.QUERY_IF);
                 respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + cosecha);
