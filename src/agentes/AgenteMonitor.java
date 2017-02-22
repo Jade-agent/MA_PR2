@@ -35,10 +35,15 @@ public class AgenteMonitor extends Agent {
     private int pairAgricultoresLleno;
     private int totalAgricultores;
 
+    private ObjetoPair[] pairMercados;
+    private int pairMercadosLleno;
+    private int totalMercados;
+
     private ArrayList<String> mensajesParaConsola;
 
     private AID consola;
     private AID[] agentesAgricultor;
+    private AID[] agentesMercado;
 
     @Override
     protected void setup() {
@@ -54,7 +59,8 @@ public class AgenteMonitor extends Agent {
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola(this, 5000));
         addBehaviour(new TareaBuscarAgricultores(this, 12000));
-        addBehaviour(new TareaRecepcionOperacion());
+        addBehaviour(new TareaBuscarMercado(this, 12000));
+        addBehaviour(new TareaRecepcionContestacion());
 
     }
 
@@ -162,6 +168,41 @@ public class AgenteMonitor extends Agent {
         }
     }
 
+    public class TareaBuscarMercado extends TickerBehaviour {
+
+        public TareaBuscarMercado(Agent a, long period) {
+            super(a, period);
+        }
+
+        @Override
+        protected void onTick() {
+            DFAgentDescription template;
+            ServiceDescription sd;
+            DFAgentDescription[] result;
+
+            //Busca agentes Mercado
+            template = new DFAgentDescription();
+            sd = new ServiceDescription();
+            sd.setName("Mercado");
+            template.addServices(sd);
+
+            try {
+                result = DFService.search(myAgent, template);
+                if (result.length > 0) {
+                    agentesMercado = new AID[result.length];
+                    for (int i = 0; i < result.length; ++i) {
+                        agentesMercado[i] = result[i].getName();
+                    }
+                    addBehaviour(new PedirStock());
+                } else {
+                    //No se han encontrado agentes Mercado
+                    agentesMercado = null;
+                }
+            } catch (FIPAException fe) {
+            }
+        }
+    }
+
     public class PedirGanancias extends OneShotBehaviour {
 
         @Override
@@ -171,7 +212,6 @@ public class AgenteMonitor extends Agent {
             totalAgricultores = agentesAgricultor.length;
             System.out.println("El vector tiene tam " + agentesAgricultor.length);
             pairAgricultoresLleno = 0;
-            totalAgricultores = agentesAgricultor.length;
 
             ACLMessage mensaje = new ACLMessage(ACLMessage.QUERY_IF);
             mensaje.setSender(myAgent.getAID());
@@ -184,7 +224,28 @@ public class AgenteMonitor extends Agent {
         }
     }
 
-    public class TareaRecepcionOperacion extends CyclicBehaviour {
+    public class PedirStock extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            //Se envía la operación a todos los agentes Mercado
+            pairMercados = new ObjetoPair[agentesMercado.length];
+            totalMercados = agentesMercado.length;
+            System.out.println("El vector tiene tam " + agentesMercado.length);
+            pairMercadosLleno = 0;
+
+            ACLMessage mensaje = new ACLMessage(ACLMessage.QUERY_IF);
+            mensaje.setSender(myAgent.getAID());
+            //Se añaden todos los agentes Mercado
+            for (AID agentesMercado1 : agentesMercado) {
+                mensaje.addReceiver(agentesMercado1);
+            }
+            mensaje.setContent("Dime tu stock.");
+            send(mensaje);
+        }
+    }
+
+    public class TareaRecepcionContestacion extends CyclicBehaviour {
 
         @Override
         public void action() {
@@ -195,12 +256,13 @@ public class AgenteMonitor extends Agent {
                 //procesamos el mensaje
                 String[] contenido = mensaje.getContent().split(",");
                 if ("Agricultor".equals(contenido[0])) {
-                    ObjetoPair o = new ObjetoPair(contenido[1], contenido[2]);
-                    pairAgricultores[pairAgricultoresLleno] = o;
+                    pairAgricultores[pairAgricultoresLleno] = new ObjetoPair(contenido[1], contenido[2]);
                     ++pairAgricultoresLleno;
                     addBehaviour(new RellenarTabla("Agricultor"));
                 } else {
-
+                    pairMercados[pairMercadosLleno] = new ObjetoPair(contenido[1], contenido[2]);
+                    ++pairMercadosLleno;
+                    addBehaviour(new RellenarTabla("Mercado"));
                 }
             } else {
                 block();
@@ -225,6 +287,13 @@ public class AgenteMonitor extends Agent {
                     }
                 }
                 guiAgricultores.burbuja();
+            } else {
+                for (int z = totalMercados - 1; z >= 0; z--) {
+                    if (pairMercados[z] != null) {
+                        guiMercados.insertarFila(pairMercados[z].getNombre(), pairMercados[z].getValor());
+                    }
+                }
+                guiMercados.burbuja();
             }
         }
     }

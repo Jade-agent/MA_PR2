@@ -19,22 +19,20 @@ import java.util.ArrayList;
 
 /**
  *
- * @author jcsp0003
+ * @author pedroj Esqueleto de agente para la estructura general que deben tener
+ * todos los agentes
  */
-public class AgenteAgricultor extends Agent {
+public class AgenteMercado extends Agent {
 
     //Variables del agente
-    private int cosecha, ganancias;
-    private boolean negociando;
+    private int capital;
     private AID consola;
     private ArrayList<String> mensajesParaConsola;
 
     @Override
     protected void setup() {
         //Inicialización de las variables del agente
-        cosecha = 0;
-        ganancias = 0;
-        negociando = false;
+        capital = 0;
         consola = null;
         mensajesParaConsola = new ArrayList();
 
@@ -43,7 +41,7 @@ public class AgenteAgricultor extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         sd.setType("Productor");
-        sd.setName("Agricultor");
+        sd.setName("Mercado");
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
@@ -52,11 +50,10 @@ public class AgenteAgricultor extends Agent {
 
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
-        addBehaviour(new TareaGenerarCosecha(this, 5000));
+        addBehaviour(new TareaRecibirInversion(this, 3000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola());
-        addBehaviour(new LeerPeticionGanancias());
-
+        addBehaviour(new LeerPeticionStock());
     }
 
     @Override
@@ -73,16 +70,17 @@ public class AgenteAgricultor extends Agent {
 
     //Métodos de trabajo del agente
     //Clases internas que representan las tareas del agente
-    public class TareaGenerarCosecha extends TickerBehaviour {
+    public class TareaRecibirInversion extends TickerBehaviour {
 
-        public TareaGenerarCosecha(Agent a, long period) {
+        public TareaRecibirInversion(Agent a, long period) {
             super(a, period);
         }
 
         @Override
         protected void onTick() {
-            ++cosecha;
-            mensajesParaConsola.add("Ha recogido la cosecha, ahora tiene " + cosecha);
+            int x = (int) (Math.random() * 7) + 2;
+            capital += x;
+            mensajesParaConsola.add("Ha recibido una inversion de " + x + " ahora tiene " + capital);
         }
     }
 
@@ -134,18 +132,17 @@ public class AgenteAgricultor extends Agent {
             }
         }
     }
-
-    public class LeerPeticionGanancias extends CyclicBehaviour {
+    
+    public class LeerPeticionStock extends CyclicBehaviour {
 
         @Override
         public void action() {
             MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
             ACLMessage mensaje = myAgent.receive(plantilla);
             if (mensaje != null) {
-                //System.out.println("Soy el agricultor me estan preguntando mis ganancias");
                 ACLMessage respuesta = mensaje.createReply();
                 respuesta.setPerformative(ACLMessage.QUERY_IF);
-                respuesta.setContent("Agricultor," + this.getAgent().getName() + "," + cosecha);
+                respuesta.setContent("Mercado," + this.getAgent().getName() + "," + capital);
                 send(respuesta);
             } else {
                 block();
