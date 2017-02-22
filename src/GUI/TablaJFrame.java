@@ -36,17 +36,15 @@ public class TablaJFrame extends javax.swing.JFrame {
         } else {
             modelo.addColumn("Agentes mercado");
             modelo.addColumn("Stocks");
-            setLocation(440,0);
+            setLocation(440, 0);
         }
         this.tabla.setModel(modelo);
     }
 
     public void insertarFila(String nombreAgente, String valor) {
-        int filas=modelo.getRowCount();
-        for(int i=0;i<filas;i++){
-            System.out.println(modelo.getValueAt(i, 0)+" == "+nombreAgente);
-            if(modelo.getValueAt(i, 0).toString().equals(nombreAgente)){
-                System.out.println("GENIAL");
+        int filas = modelo.getRowCount();
+        for (int i = 0; i < filas; i++) {
+            if (modelo.getValueAt(i, 0).toString().equals(nombreAgente)) {
                 modelo.setValueAt(valor, i, 1);
                 return;
             }
@@ -55,6 +53,26 @@ public class TablaJFrame extends javax.swing.JFrame {
         Datos[0] = nombreAgente;
         Datos[1] = valor;
         modelo.addRow(Datos);
+    }
+
+    public void burbuja() {
+        int nFilas = modelo.getRowCount();
+        String auxNombre, auxValor;
+        int v1, v2;
+        for (int i = 0; i < nFilas - 1; i++) {
+            for (int j = 0; j < nFilas - i - 1; j++) {
+                v1 = Integer.parseInt(modelo.getValueAt(j + 1, 1).toString());
+                v2 = Integer.parseInt(modelo.getValueAt(j, 1).toString());
+                if (v1 > v2) {
+                    auxNombre = modelo.getValueAt(j + 1, 0).toString();
+                    auxValor = modelo.getValueAt(j + 1, 1).toString();
+                    modelo.setValueAt(modelo.getValueAt(j, 0).toString(), j + 1, 0);
+                    modelo.setValueAt(modelo.getValueAt(j, 1).toString(), j + 1, 1);
+                    modelo.setValueAt(auxNombre, j, 0);
+                    modelo.setValueAt(auxValor, j, 1);
+                }
+            }
+        }
     }
 
     /**

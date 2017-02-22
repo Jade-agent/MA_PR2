@@ -210,39 +210,21 @@ public class AgenteMonitor extends Agent {
 
     public class RellenarTabla extends OneShotBehaviour {
 
-        private String tipo;
+        private final String tipo;
 
         public RellenarTabla(String tipoo) {
             this.tipo = tipoo;
         }
 
-        private void burbuja() {
-            int i, j;
-            ObjetoPair aux;
-            for (i = 0; i < pairAgricultores.length - 1; i++) {
-                for (j = 0; j < pairAgricultores.length - i - 1; j++) {
-                    if (pairAgricultores[j + 1] != null && pairAgricultores[j] != null) {
-                        if (Integer.parseInt(pairAgricultores[j + 1].getValor()) < Integer.parseInt(pairAgricultores[j].getValor())) {
-                            aux = pairAgricultores[j + 1];
-                            pairAgricultores[j + 1] = pairAgricultores[j];
-                            pairAgricultores[j] = aux;
-                        }
-                    }
-                }
-            }
-        }
-
         @Override
         public void action() {
-            burbuja();
             if ("Agricultor".equals(this.tipo)) {
-                //guiAgricultores.dispose();
-                //guiAgricultores = new TablaJFrame("Agricultor");
                 for (int z = totalAgricultores - 1; z >= 0; z--) {
                     if (pairAgricultores[z] != null) {
                         guiAgricultores.insertarFila(pairAgricultores[z].getNombre(), pairAgricultores[z].getValor());
                     }
                 }
+                guiAgricultores.burbuja();
             }
         }
     }
