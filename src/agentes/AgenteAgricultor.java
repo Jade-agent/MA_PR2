@@ -66,6 +66,7 @@ public class AgenteAgricultor extends Agent {
         addBehaviour(new TareaBuscarMercado(this, 15000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
+        addBehaviour(new LeerOfertas());
     }
 
     @Override
@@ -90,6 +91,10 @@ public class AgenteAgricultor extends Agent {
 
         @Override
         protected void onTick() {
+            if (cosecha < 0) {
+                System.out.println("COSECHA < 0");
+                System.exit(-1);
+            }
             ++cosecha;
         }
     }
@@ -170,6 +175,10 @@ public class AgenteAgricultor extends Agent {
 
         @Override
         protected void onTick() {
+            if (vendiendo) {
+                mensajesParaConsola.add("Intento hacer una compra sin haber acabado la enterior");//<-----------------------------
+            }
+
             DFAgentDescription template;
             ServiceDescription sd;
             DFAgentDescription[] result;
@@ -187,6 +196,7 @@ public class AgenteAgricultor extends Agent {
                     for (int i = 0; i < result.length; ++i) {
                         agentesMercado[i] = result[i].getName();
                     }
+                    mensajesParaConsola.add("");
                     mensajesParaConsola.add("Se han localizado " + result.length + " mercados.");
                     addBehaviour(new PedirOferta());
                 } else {
@@ -218,6 +228,91 @@ public class AgenteAgricultor extends Agent {
             mensaje.setContent("Dime tu oferta" + "," + cVendo + "," + nVenta + "," + this.myAgent.getName());
             mensajesParaConsola.add("Dime tu oferta" + "," + cVendo + "," + nVenta + "," + this.myAgent.getName());
             send(mensaje);
+        }
+    }
+
+    public class LeerOfertas extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                //Formato de la respuesta: nombre,precio,nVenta
+                String[] contenido = mensaje.getContent().split(",");
+                mensajesParaConsola.add("Oferta de venta de " + contenido[0] + " compra por" + contenido[1] + "€");
+                int n = Integer.parseInt(contenido[2]);
+                if (n == nVenta) {
+                    ofertas.add(mensaje);
+                    if (ofertas.size() == agentesMercado.length) {
+                        mensajesParaConsola.add("Me han contestado todos los Mercados");
+                        int idMejor = -1;
+                        int precio = -1;
+                        int ofer;
+                        for (int i = 0; i < ofertas.size(); i++) {
+                            String[] mens = ofertas.get(i).getContent().split(",");
+                            ofer = Integer.parseInt(mens[1]);
+                            if (ofer != -1 && ofer > precio) {
+                                idMejor = i;
+                                precio = ofer;
+                            }
+                        }
+                        if (idMejor != -1) {
+                            mensajesParaConsola.add("La mejor oferta ha sido " + precio);
+                            addBehaviour(new ComunicarDecision(idMejor));
+                        } else {
+                            mensajesParaConsola.add("No he recibido ninguna oferta aceptable.");
+                            vendiendo = false;
+                        }
+                    }
+                } else {
+                    mensajesParaConsola.add("-----------ME HA LLEGADO UNA PETICION ANTIGUA------------");
+                }
+            } else {
+                block();
+            }
+        }
+    }
+
+    public class ComunicarDecision extends OneShotBehaviour {
+
+        private final int mejor;
+
+        public ComunicarDecision(int mejorr) {
+            this.mejor = mejorr;
+        }
+
+        @Override
+        public void action() {
+            if (vendiendo) {
+                ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+                mensaje.setSender(myAgent.getAID());
+                int ofer;
+                for (int i = 0; i < ofertas.size(); i++) {
+                    String[] mens = ofertas.get(i).getContent().split(",");
+                    ofer = Integer.parseInt(mens[1]);
+                    if (ofer != -1 && i != this.mejor) {
+                        mensaje.addReceiver(ofertas.get(i).getSender());
+                    }
+                }
+                mensaje.setContent("Rechazo");
+                send(mensaje);
+
+                if (this.mejor != -1) {
+                    ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
+                    mensaje2.setSender(myAgent.getAID());
+                    mensaje2.addReceiver(ofertas.get(this.mejor).getSender());
+                    mensaje2.setContent("Acepto");
+                    send(mensaje2);
+                    String[] mens2 = ofertas.get(mejor).getContent().split(",");
+                    cosecha -= cVendo;
+                    ganancias += Integer.parseInt(mens2[1]);
+                    mensajesParaConsola.add("He ganado "+mens2[1]+" y ya he contestado a los mercados.");
+                } else {
+                    System.out.println("Se ha colado una oferta no valida");
+                    System.exit(-1);
+                }
+            }
         }
     }
 

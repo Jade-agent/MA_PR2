@@ -30,9 +30,11 @@ public class AgenteMercado extends Agent {
     private int capital;
     private int stock;
     private ArrayList<String> mensajesParaConsola;
-
+    
+    private boolean comprando;
+    
     private AID consola;
-
+    
     @Override
     protected void setup() {
         //Inicialización de las variables del agente
@@ -40,6 +42,7 @@ public class AgenteMercado extends Agent {
         stock = 0;
         consola = null;
         mensajesParaConsola = new ArrayList();
+        comprando = false;
 
         //Registro del agente en las Páginas Amarrillas
         DFAgentDescription dfd = new DFAgentDescription();
@@ -52,15 +55,16 @@ public class AgenteMercado extends Agent {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
         }
-
+        
         System.out.println("Se inicia la ejecución del agente: " + this.getName());
         //Añadir las tareas principales
         addBehaviour(new TareaRecibirInversion(this, 3000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
+        addBehaviour(new LeerPeticionOfertas());
     }
-
+    
     @Override
     protected void takeDown() {
         //Desregristo del agente de las Páginas Amarillas
@@ -76,25 +80,29 @@ public class AgenteMercado extends Agent {
     //Métodos de trabajo del agente
     //Clases internas que representan las tareas del agente
     public class TareaRecibirInversion extends TickerBehaviour {
-
+        
         public TareaRecibirInversion(Agent a, long period) {
             super(a, period);
         }
-
+        
         @Override
         protected void onTick() {
+            if (capital < 0) {
+                System.out.println("CAPITAL < 0");
+                System.exit(-1);
+            }
             int x = (int) (Math.random() * 7) + 2;
             capital += x;
         }
     }
-
+    
     public class TareaBuscarConsola extends TickerBehaviour {
 
         //Se buscarán agentes consola y operación
         public TareaBuscarConsola(Agent a, long period) {
             super(a, period);
         }
-
+        
         @Override
         protected void onTick() {
             DFAgentDescription template;
@@ -106,7 +114,7 @@ public class AgenteMercado extends Agent {
             sd = new ServiceDescription();
             sd.setName("Consola");
             template.addServices(sd);
-
+            
             try {
                 result = DFService.search(myAgent, template);
                 if (result.length > 0) {
@@ -119,9 +127,9 @@ public class AgenteMercado extends Agent {
             }
         }
     }
-
+    
     public class TareaEnvioConsola extends CyclicBehaviour {
-
+        
         @Override
         public void action() {
             if (consola != null && !mensajesParaConsola.isEmpty()) {
@@ -129,16 +137,16 @@ public class AgenteMercado extends Agent {
                 mensaje.setSender(myAgent.getAID());
                 mensaje.addReceiver(consola);
                 mensaje.setContent(mensajesParaConsola.remove(0));
-
+                
                 myAgent.send(mensaje);
             } else {
                 block();
             }
         }
     }
-
+    
     public class LeerPeticionStock extends CyclicBehaviour {
-
+        
         @Override
         public void action() {
             MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF);
@@ -153,6 +161,46 @@ public class AgenteMercado extends Agent {
             }
         }
     }
-
-
+    
+    public class LeerPeticionOfertas extends CyclicBehaviour {
+        
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                //Formato del mensaje: null,cantidad,nVenta,nombre
+                String[] contenido = mensaje.getContent().split(",");
+                if (!comprando) {
+                    if (capital > 0) {
+                        //Formato de la respuesta: nombre,precio,nVenta
+                        ACLMessage respuesta = mensaje.createReply();
+                        respuesta.setPerformative(ACLMessage.REQUEST);
+                        float precioMax = (float) (capital * 0.6);
+                        int oferta = (int) (Math.random() * precioMax)+1;
+                        respuesta.setContent(this.getAgent().getName() + "," + oferta + "," + contenido[2]);
+                        send(respuesta);
+                        comprando = true;
+                        mensajesParaConsola.add("Oferta de compra del agente " + contenido[0] + " vendo por " + oferta);
+                    } else {
+                        //enviar mensaje nulo
+                        ACLMessage respuesta = mensaje.createReply();
+                        respuesta.setPerformative(ACLMessage.REQUEST);
+                        respuesta.setContent(this.getAgent().getName() + "," + -1 + "," + contenido[2]);
+                        send(respuesta);
+                    }
+                } else {
+                    //enviar mensaje nulo
+                    mensajesParaConsola.add("Estoy negociando, no me molestes");
+                    ACLMessage respuesta = mensaje.createReply();
+                    respuesta.setPerformative(ACLMessage.REQUEST);
+                    respuesta.setContent(this.getAgent().getName() + "," + -1 + "," + contenido[2]);
+                    send(respuesta);
+                }
+            } else {
+                block();
+            }
+        }
+        
+    }
 }
