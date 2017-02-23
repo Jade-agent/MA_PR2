@@ -8,6 +8,7 @@ package agentes;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -26,6 +27,11 @@ public class AgenteAgricultor extends Agent {
     //Variables del agente
     private int cosecha, ganancias;
 
+    private ArrayList<ACLMessage> ofertas;
+    private boolean vendiendo;
+    private int cVendo;
+    private int nVenta;
+
     private AID[] agentesMercado;
     private AID consola;
 
@@ -34,7 +40,9 @@ public class AgenteAgricultor extends Agent {
     @Override
     protected void setup() {
         //Inicialización de las variables del agente
+        vendiendo = false;
         cosecha = 0;
+        nVenta = 0;
         ganancias = 0;
         consola = null;
         mensajesParaConsola = new ArrayList();
@@ -180,6 +188,7 @@ public class AgenteAgricultor extends Agent {
                         agentesMercado[i] = result[i].getName();
                     }
                     mensajesParaConsola.add("Se han localizado " + result.length + " mercados.");
+                    addBehaviour(new PedirOferta());
                 } else {
                     //No se han encontrado agentes Mercado
                     mensajesParaConsola.add("No se han encontardo mercados mercados.");
@@ -187,6 +196,28 @@ public class AgenteAgricultor extends Agent {
                 }
             } catch (FIPAException fe) {
             }
+        }
+    }
+
+    public class PedirOferta extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            //Se envía la operación a todos los agentes Agricultor
+            ofertas = new ArrayList();
+            vendiendo = true;
+            ++nVenta;
+
+            ACLMessage mensaje = new ACLMessage(ACLMessage.REQUEST);
+            mensaje.setSender(myAgent.getAID());
+            //Se añaden todos los agentes Agricultor
+            for (AID agentesMercado1 : agentesMercado) {
+                mensaje.addReceiver(agentesMercado1);
+            }
+            cVendo = cosecha;
+            mensaje.setContent("Dime tu oferta" + "," + cVendo + "," + nVenta + "," + this.myAgent.getName());
+            mensajesParaConsola.add("Dime tu oferta" + "," + cVendo + "," + nVenta + "," + this.myAgent.getName());
+            send(mensaje);
         }
     }
 
