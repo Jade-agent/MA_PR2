@@ -25,8 +25,10 @@ public class AgenteAgricultor extends Agent {
 
     //Variables del agente
     private int cosecha, ganancias;
-    private boolean negociando;
+
+    private AID[] agentesMercado;
     private AID consola;
+
     private ArrayList<String> mensajesParaConsola;
 
     @Override
@@ -34,7 +36,6 @@ public class AgenteAgricultor extends Agent {
         //Inicialización de las variables del agente
         cosecha = 0;
         ganancias = 0;
-        negociando = false;
         consola = null;
         mensajesParaConsola = new ArrayList();
 
@@ -54,11 +55,9 @@ public class AgenteAgricultor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
+        addBehaviour(new TareaBuscarMercado(this, 15000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
-        addBehaviour(new LeerPeticionOfertas());
-        addBehaviour(new LeerDecision());
-
     }
 
     @Override
@@ -155,70 +154,40 @@ public class AgenteAgricultor extends Agent {
 
     }
 
-    public class LeerPeticionOfertas extends CyclicBehaviour {
+    public class TareaBuscarMercado extends TickerBehaviour {
+
+        public TareaBuscarMercado(Agent a, long period) {
+            super(a, period);
+        }
 
         @Override
-        public void action() {
-            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-            ACLMessage mensaje = myAgent.receive(plantilla);
-            if (mensaje != null) {
-                String[] contenido = mensaje.getContent().split(",");
-                if (!negociando) {
-                    if (cosecha > 0) {
-                        //Formato de la respuesta: nombre,unidades,precio,nVenta
-                        ACLMessage respuesta = mensaje.createReply();
-                        respuesta.setPerformative(ACLMessage.REQUEST);
-                        float precioMax = (float) (Float.parseFloat(contenido[1])*0.6);
-                        int oferta = (int) (Math.random() * precioMax);
-                        respuesta.setContent(this.getAgent().getName() + "," + cosecha + "," + oferta + "," + contenido[2]);
-                        send(respuesta);
-                        negociando = true;
-                        //mensajesParaConsola.add("Oferta de compra del agente " + contenido[3]+" vendo por "+oferta);
-                    } else {
-                        //negociando = false;
-                        //enviar mensaje nulo
-                        ACLMessage respuesta = mensaje.createReply();
-                        respuesta.setPerformative(ACLMessage.REQUEST);
-                        respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1 + "," + contenido[2]);
-                        send(respuesta);
+        protected void onTick() {
+            DFAgentDescription template;
+            ServiceDescription sd;
+            DFAgentDescription[] result;
+
+            //Busca agentes Mercado
+            template = new DFAgentDescription();
+            sd = new ServiceDescription();
+            sd.setName("Mercado");
+            template.addServices(sd);
+
+            try {
+                result = DFService.search(myAgent, template);
+                if (result.length > 0) {
+                    agentesMercado = new AID[result.length];
+                    for (int i = 0; i < result.length; ++i) {
+                        agentesMercado[i] = result[i].getName();
                     }
+                    mensajesParaConsola.add("Se han localizado " + result.length + " mercados.");
                 } else {
-                    //enviar mensaje nulo
-                    mensajesParaConsola.add("Estoy negociando, no me molestes");
-                    ACLMessage respuesta = mensaje.createReply();
-                    respuesta.setPerformative(ACLMessage.REQUEST);
-                    respuesta.setContent(this.getAgent().getName() + "," + 0 + "," + 1 + "," + contenido[2]);
-                    send(respuesta);
+                    //No se han encontrado agentes Mercado
+                    mensajesParaConsola.add("No se han encontardo mercados mercados.");
+                    agentesMercado = null;
                 }
-            } else {
-                block();
+            } catch (FIPAException fe) {
             }
         }
-
     }
 
-    public class LeerDecision extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-            ACLMessage mensaje = myAgent.receive(plantilla);
-            if (mensaje != null) {
-                String[] contenido = mensaje.getContent().split(",");
-                if("Acepto".equals(contenido[0])){
-                    mensajesParaConsola.add("Han aceptado mi oferta");
-                    int vendo=Integer.parseInt(contenido[1]);
-                    int gano=Integer.parseInt(contenido[2]);
-                    cosecha-=vendo;
-                    ganancias+=gano;
-                }else{
-                    mensajesParaConsola.add("Han rechazado mi oferta");
-                }
-                negociando=false;
-            } else {
-                block();
-            }
-        }
-
-    }
 }
