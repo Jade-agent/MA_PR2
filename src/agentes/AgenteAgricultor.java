@@ -67,6 +67,8 @@ public class AgenteAgricultor extends Agent {
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
         addBehaviour(new LeerOfertas());
+        addBehaviour(new LeerFinal());
+        
     }
 
     @Override
@@ -173,10 +175,61 @@ public class AgenteAgricultor extends Agent {
             super(a, period);
         }
 
+        public void timeOUT() {
+            int idMejor = -1;
+            int precio = -1;
+            int ofer;
+            for (int i = 0; i < ofertas.size(); i++) {
+                String[] mens = ofertas.get(i).getContent().split(",");
+                ofer = Integer.parseInt(mens[1]);
+                if (ofer != -1 && ofer > precio) {
+                    idMejor = i;
+                    precio = ofer;
+                }
+            }
+            if (idMejor != -1) {
+                mensajesParaConsola.add("La mejor oferta ha sido " + precio);
+                addBehaviour(new ComunicarDecision(idMejor));
+            } else {
+                mensajesParaConsola.add("No he recibido ninguna oferta aceptable.");
+                vendiendo = false;
+            }
+            vendiendo = false;
+            ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+            mensaje.setSender(myAgent.getAID());
+            for (int i = 0; i < ofertas.size(); i++) {
+                String[] mens = ofertas.get(i).getContent().split(",");
+                ofer = Integer.parseInt(mens[1]);
+                if (ofer != -1 && i != idMejor) {
+                    mensaje.addReceiver(ofertas.get(i).getSender());
+                }
+            }
+            mensaje.setContent("Rechazo");
+            send(mensaje);
+
+            if (idMejor != -1) {
+                String[] mens2 = ofertas.get(idMejor).getContent().split(",");
+                cosecha -= cVendo;
+                ganancias += Integer.parseInt(mens2[1]);
+
+                ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
+                mensaje2.setSender(myAgent.getAID());
+                mensaje2.addReceiver(ofertas.get(idMejor).getSender());
+                mensaje2.setContent("Acepto," + cVendo + "," + mens2[1]);
+                send(mensaje2);
+
+                mensajesParaConsola.add("He ganado " + mens2[1] + " y ya he contestado a los mercados.");
+            } else {
+                System.out.println("Se ha colado una oferta no valida");
+                System.exit(-1);
+            }
+        }
+
         @Override
         protected void onTick() {
             if (vendiendo) {
-                mensajesParaConsola.add("Intento hacer una compra sin haber acabado la enterior");//<-----------------------------
+                mensajesParaConsola.add("Venta por time out");
+                timeOUT();
             }
 
             DFAgentDescription template;
@@ -303,18 +356,32 @@ public class AgenteAgricultor extends Agent {
                     String[] mens2 = ofertas.get(mejor).getContent().split(",");
                     cosecha -= cVendo;
                     ganancias += Integer.parseInt(mens2[1]);
-                    
+
                     ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
                     mensaje2.setSender(myAgent.getAID());
                     mensaje2.addReceiver(ofertas.get(this.mejor).getSender());
-                    mensaje2.setContent("Acepto,"+cVendo+","+mens2[1]);
+                    mensaje2.setContent("Acepto," + cVendo + "," + mens2[1]);
                     send(mensaje2);
-                    
-                    mensajesParaConsola.add("He ganado "+mens2[1]+" y ya he contestado a los mercados.");
+
+                    mensajesParaConsola.add("He ganado " + mens2[1] + " y ya he contestado a los mercados.");
                 } else {
                     System.out.println("Se ha colado una oferta no valida");
                     System.exit(-1);
                 }
+            }
+        }
+    }
+    
+    public class LeerFinal extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+               this.myAgent.doDelete();
+            } else {
+                block();
             }
         }
     }

@@ -59,6 +59,7 @@ public class AgenteMonitor extends Agent {
         addBehaviour(new TareaBuscarAgricultores(this, 15000));
         addBehaviour(new TareaBuscarMercado(this, 15000));
         addBehaviour(new TareaRecepcionContestacion());
+        addBehaviour(new Final(this, 300000));
 
     }
 
@@ -208,7 +209,6 @@ public class AgenteMonitor extends Agent {
             //Se envía la operación a todos los agentes Agricultor
             pairAgricultores = new ObjetoContenedor[agentesAgricultor.length];
             totalAgricultores = agentesAgricultor.length;
-            System.out.println("El vector tiene tam " + agentesAgricultor.length);
             pairAgricultoresLleno = 0;
 
             ACLMessage mensaje = new ACLMessage(ACLMessage.QUERY_IF);
@@ -229,7 +229,6 @@ public class AgenteMonitor extends Agent {
             //Se envía la operación a todos los agentes Mercado
             pairMercados = new ObjetoContenedor[agentesMercado.length];
             totalMercados = agentesMercado.length;
-            System.out.println("El vector tiene tam " + agentesMercado.length);
             pairMercadosLleno = 0;
 
             ACLMessage mensaje = new ACLMessage(ACLMessage.QUERY_IF);
@@ -294,6 +293,29 @@ public class AgenteMonitor extends Agent {
                 guiMercados.burbuja();
             }
         }
+    }
+
+    public class Final extends TickerBehaviour {
+
+        public Final(Agent a, long period) {
+            super(a, period);
+        }
+
+        @Override
+        protected void onTick() {
+            mensajesParaConsola.add("Final de las ventas");
+            ACLMessage mensaje = new ACLMessage(ACLMessage.CANCEL);
+            mensaje.setSender(myAgent.getAID());
+            for (AID agentesAgricultor1 : agentesAgricultor) {
+                mensaje.addReceiver(agentesAgricultor1);
+            }
+            for (AID agentesMercado1 : agentesMercado) {
+                mensaje.addReceiver(agentesMercado1);
+            }
+            mensaje.setContent("FIN DEL SISTEMA");
+            send(mensaje);
+        }
+
     }
 
 }

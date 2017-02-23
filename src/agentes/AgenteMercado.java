@@ -64,6 +64,7 @@ public class AgenteMercado extends Agent {
         addBehaviour(new LeerPeticionStock());
         addBehaviour(new LeerPeticionOfertas());
         addBehaviour(new LeerDecision());
+        addBehaviour(new LeerFinal());
     }
     
     @Override
@@ -226,5 +227,19 @@ public class AgenteMercado extends Agent {
             }
         }
 
+    }
+    
+    public class LeerFinal extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+               this.myAgent.doDelete();
+            } else {
+                block();
+            }
+        }
     }
 }
