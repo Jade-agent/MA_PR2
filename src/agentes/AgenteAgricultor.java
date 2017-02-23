@@ -285,6 +285,7 @@ public class AgenteAgricultor extends Agent {
         @Override
         public void action() {
             if (vendiendo) {
+                vendiendo = false;
                 ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
                 mensaje.setSender(myAgent.getAID());
                 int ofer;
@@ -299,14 +300,16 @@ public class AgenteAgricultor extends Agent {
                 send(mensaje);
 
                 if (this.mejor != -1) {
-                    ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
-                    mensaje2.setSender(myAgent.getAID());
-                    mensaje2.addReceiver(ofertas.get(this.mejor).getSender());
-                    mensaje2.setContent("Acepto");
-                    send(mensaje2);
                     String[] mens2 = ofertas.get(mejor).getContent().split(",");
                     cosecha -= cVendo;
                     ganancias += Integer.parseInt(mens2[1]);
+                    
+                    ACLMessage mensaje2 = new ACLMessage(ACLMessage.INFORM);
+                    mensaje2.setSender(myAgent.getAID());
+                    mensaje2.addReceiver(ofertas.get(this.mejor).getSender());
+                    mensaje2.setContent("Acepto,"+cVendo+","+mens2[1]);
+                    send(mensaje2);
+                    
                     mensajesParaConsola.add("He ganado "+mens2[1]+" y ya he contestado a los mercados.");
                 } else {
                     System.out.println("Se ha colado una oferta no valida");

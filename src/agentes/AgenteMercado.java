@@ -63,6 +63,7 @@ public class AgenteMercado extends Agent {
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionStock());
         addBehaviour(new LeerPeticionOfertas());
+        addBehaviour(new LeerDecision());
     }
     
     @Override
@@ -202,5 +203,28 @@ public class AgenteMercado extends Agent {
             }
         }
         
+    }
+    
+    public class LeerDecision extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            MessageTemplate plantilla = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+            ACLMessage mensaje = myAgent.receive(plantilla);
+            if (mensaje != null) {
+                String[] contenido = mensaje.getContent().split(",");
+                if("Acepto".equals(contenido[0])){
+                    mensajesParaConsola.add("Han aceptado mi oferta");
+                    stock+=Integer.parseInt(contenido[1]);
+                    capital-=Integer.parseInt(contenido[2]);
+                }else{
+                    mensajesParaConsola.add("Han rechazado mi oferta");
+                }
+                comprando=false;
+            } else {
+                block();
+            }
+        }
+
     }
 }
