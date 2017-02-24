@@ -63,7 +63,7 @@ public class AgenteAgricultor extends Agent {
         //Añadir las tareas principales
         addBehaviour(new TareaGenerarCosecha(this, 5000));
         addBehaviour(new TareaBuscarConsola(this, 5000));
-        addBehaviour(new TareaBuscarMercado(this, 15000));
+        addBehaviour(new TareaBuscarMercado(this, 6000));
         addBehaviour(new TareaEnvioConsola());
         addBehaviour(new LeerPeticionGanancias());
         addBehaviour(new LeerOfertas());

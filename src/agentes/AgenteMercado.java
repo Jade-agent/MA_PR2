@@ -8,7 +8,6 @@ package agentes;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -17,7 +16,6 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
-import utilidad.ObjetoContenedor;
 
 /**
  *
@@ -215,7 +213,7 @@ public class AgenteMercado extends Agent {
             if (mensaje != null) {
                 String[] contenido = mensaje.getContent().split(",");
                 if("Acepto".equals(contenido[0])){
-                    mensajesParaConsola.add("Han aceptado mi oferta");
+                    mensajesParaConsola.add("--Han aceptado mi oferta--");
                     stock+=Integer.parseInt(contenido[1]);
                     capital-=Integer.parseInt(contenido[2]);
                 }else{
